@@ -8,75 +8,103 @@
 import SwiftUI
 
 struct ContentView: View {
-    let emojis = ["🦁", "🐭", "🐯", "🐮", "🐸", "🦊", "🐻", "🐰"]
-    let cardBaseColor: Color = .orange
+    // MARK: Themes
+    // Dictionary with all available themes
+    let themes = [
+        "animals" : ["🦁", "🐭", "🐯", "🐮", "🐸", "🦊", "🐻", "🐰"],
+        "fruits": ["🍏", "🍎", "🍒", "🍓", "🍇", "🍌", "🍍", "🍉"],
+        "flags": ["🇧🇷", "🇮🇹", "🇫🇷", "🇭🇷", "🇨🇱", "🇮🇪", "🇨🇳", "🇹🇼"]
+    ]
     
-    // number of cards showed on the screen
-    @State var cardCount = 4
+    // dictionary with available colors
+    let colors: [String: Color] = [
+        "animals": .blue,
+        "fruits": .red,
+        "flags": .green
+    ]
     
+    // current chosen theme
+    @State var currentTheme: [String] = []
+    
+    // color applied to the back of the card - defaults to orange
+    @State var cardBaseColor: Color = .orange
+    
+    // MARK: Main
     var body: some View {
         VStack {
+            Text("Memorize!")
+                .font(.largeTitle)
+                .padding()
             ScrollView {
                 cards
             }
             Spacer()
-            cardCountAdjusters
+            themeChangers
         }
     }
     
-    // cards on the screen
+    // MARK: Cards
+    // creates cards on the screen
     var cards: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))]) {
-            ForEach(0..<cardCount, id: \.self) { index in
-                if(index < emojis.count) {
-                    CardView(faceValue: emojis[index])
-                        .aspectRatio(2/3, contentMode: .fit)
-                }
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))]) {
+            // loop through current chosen theme and create cards for each array value
+            ForEach(0..<currentTheme.count, id: \.self) { index in
+                CardView(faceValue: currentTheme[index])
+                    .aspectRatio(2/3, contentMode: .fit)
             }
         }
         .foregroundColor(cardBaseColor)
         .padding()
     }
     
-    // Buttons at the bottom that adjust cardCount variable
-    var cardCountAdjusters: some View {
-        HStack {
-            removeCardButton
-            Spacer()
-            addCardButton
+    // #MARK: Theme change
+    // Changes chosen theme
+    func changeTheme(_ name: String) {
+        // assigns value to chosen theme if it exists
+        if let chosenTheme = themes[name] {
+            currentTheme = chosenTheme
+            // Extra credit: Make a random number of pairs of cards appear each time a theme button is chosen
+            // currentTheme = Array(currentTheme[0..<Int.random(in: 4..<currentTheme.count)])
+            // duplicate the array to form pairs
+            currentTheme += currentTheme
+            // shuffle the duplicated array
+            currentTheme = currentTheme.shuffled()
+            // Extra credit: changes color according to chosen theme - defaults to orange
+            cardBaseColor = colors[name] ?? .orange
         }
-        .labelStyle(.iconOnly)
-        .imageScale(.large)
-        .font(.title)
-        .padding()
     }
     
-    func cardCountAdjuster (by offset: Int, title: String, symbol: String)  -> some View {
-        Button(title, systemImage: symbol) {
-            cardCount += offset
+    // Buttons that allow change of the current theme
+    var themeChangers: some View {
+        HStack(alignment: .lastTextBaseline) {
+            themeChangerButton(themeName: "animals", title: "Animals", symbol: "dog")
+            themeChangerButton(themeName: "fruits", title: "Fruits", symbol: "apple.logo")
+            themeChangerButton(themeName: "flags", title: "Flags", symbol: "flag")
         }
-        .disabled(cardCount + offset < 1 || cardCount + offset > emojis.count)
     }
     
-    // Button - removes 1 from cardCount
-    var removeCardButton: some View {
-        cardCountAdjuster(by: -1, title: "Remove Card", symbol: "rectangle.stack.badge.minus.fill")
-    }
-    
-    // Button - Adds 1 to cardCount
-    var addCardButton: some View {
-        cardCountAdjuster(by: 1, title: "Add Card", symbol: "rectangle.stack.badge.plus.fill")
+    // Returns a button that changes the current theme
+    func themeChangerButton(themeName: String, title: String, symbol: String) -> some View {
+        Button(action: { changeTheme(themeName) }) {
+            VStack {
+                Image(systemName: symbol)
+                Text(title)
+            }
+            .font(.body)
+            .padding(.horizontal)
+            .imageScale(.large)
+        }
     }
 }
 
-
+// #MARK: Card View
 struct CardView: View {
     let faceValue: String
-    @State var isFaceUp = true
+    @State var isFaceUp = false
     var body: some View {
         ZStack {
             // Define card base shape
-            let baseShape = RoundedRectangle(cornerRadius: /*@START_MENU_TOKEN@*/25.0/*@END_MENU_TOKEN@*/)
+            let baseShape = RoundedRectangle(cornerRadius: 15.0)
             // Show card face up
             Group {
                 baseShape
