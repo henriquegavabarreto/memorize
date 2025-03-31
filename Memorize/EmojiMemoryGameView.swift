@@ -10,9 +10,6 @@ import SwiftUI
 struct EmojiMemoryGameView: View {
     // Observes existing object - Dependency Injection from Parent View
     @ObservedObject var viewModel: EmojiMemoryGame
-
-    // color applied to the back of the card - defaults to orange
-    @State var cardBaseColor: Color = .orange
     
     // MARK: Main
     var body: some View {
@@ -22,6 +19,7 @@ struct EmojiMemoryGameView: View {
                 .padding()
             ScrollView {
                 cards
+                    .animation(.default, value: viewModel.cards)
             }
             Button("Shuffle") {
                 viewModel.shuffle()
@@ -34,13 +32,16 @@ struct EmojiMemoryGameView: View {
     var cards: some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 85), spacing: 0)], spacing: 0) {
             // loop through current chosen theme and create cards for each array value
-            ForEach(viewModel.cards.indices, id: \.self) { index in
-                CardView(viewModel.cards[index])
+            ForEach(viewModel.cards) { card in
+                CardView(card)
                     .aspectRatio(2/3, contentMode: .fit)
                     .padding(4)
+                    .onTapGesture {
+                        viewModel.choose(card)
+                    }
             }
         }
-        .foregroundColor(cardBaseColor)
+        .foregroundColor(.orange)
         .padding()
     }
 }
@@ -73,6 +74,7 @@ struct CardView: View {
             baseShape
                 .opacity(card.isFaceUp ? 0 : 1)
         }
+        .opacity(card.isFaceUp || !card.isMatched ? 1 : 0)
     }
 }
 
